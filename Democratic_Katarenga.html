@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Democratic Katarenga</title>
+<style>
+:root{--ink:#0e1220;--ink2:#161d33;--ink3:#202a47;--line:#2d3a5f;--paper:#f1ecdf;--mute:#9aa6c4;--gold:#d9b25f;--jade:#4cc3a6;--rose:#e86a82;--blue:#6fa3ff;
+--c0:#cf4b4b;--c1:#e8c04a;--c2:#4aa66a;--c3:#4a7fd0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--paper);font:400 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1{font:800 clamp(1.7rem,4vw,2.5rem)/1.1 Georgia,"Times New Roman",serif;margin:0}
+h3{margin:.2em 0;font:700 1.05rem Georgia,serif}
+header{max-width:1240px;margin:0 auto;padding:22px 18px 0}
+header p{margin:.4em 0 0;color:var(--mute);max-width:80ch}
+.layout{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;max-width:1240px;margin:0 auto;padding:18px}
+@media(max-width:980px){.layout{grid-template-columns:1fr}}
+.status{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.pl{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.88rem}
+.pl.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.pl b{font-family:Georgia,serif;font-size:1.05rem}.pl span{color:var(--mute)}
+.board{position:relative;width:100%;aspect-ratio:1;background:linear-gradient(135deg,#7a5527,#5c3f1b);border-radius:12px;box-shadow:0 8px 30px #0008;user-select:none;touch-action:manipulation}
+.sq{position:absolute;width:10%;height:10%;display:grid;place-items:center;font-size:clamp(.8rem,3.4vw,1.6rem);color:#0003;border:1px solid #0002}
+.sq.c0{background:var(--c0)}.sq.c1{background:var(--c1)}.sq.c2{background:var(--c2)}.sq.c3{background:var(--c3)}
+.board.noglyph .sq{font-size:0}
+.sq.last{box-shadow:inset 0 0 0 3px #fff9}.sq.sel{box-shadow:inset 0 0 0 4px #fff}.sq.dest::after{content:"";width:28%;height:28%;border-radius:50%;background:#fffd;box-shadow:0 0 0 2px #0006}.sq.dest.cap::after{background:#0000;box-shadow:inset 0 0 0 4px #fff,0 0 0 2px #0006;width:70%;height:70%}
+.lb{position:absolute;width:10%;height:10%;display:grid;place-items:center;color:#e7d3a2;font-size:clamp(.6rem,1.8vw,.85rem)}
+.camp{position:absolute;width:10%;height:10%;display:grid;place-items:center}
+.camp i{width:78%;height:78%;border-radius:50%;border:2px dashed var(--gold);background:radial-gradient(#d9b25f55,#0000);display:grid;place-items:center;font-style:normal;color:var(--gold);font-size:1rem}
+.pawn{position:absolute;width:10%;height:10%;transition:left .35s ease,top .35s ease,opacity .35s;pointer-events:none;z-index:2}
+.pawn i{position:absolute;inset:12%;border-radius:50%;box-shadow:0 3px 5px #0009}
+.pawn.s1 i{background:radial-gradient(circle at 35% 30%,#fff,#e9e1cc 55%,#b9ae92)}
+.pawn.s2 i{background:radial-gradient(circle at 35% 30%,#59607a,#1a1e2c 60%,#05060b)}
+.pawn.out{opacity:0}.pawn.incamp{transform:scale(.8)}
+.ring{position:absolute;width:10%;height:10%;z-index:4;border:0;background:none;padding:0;cursor:pointer}
+.ring span{position:absolute;inset:14%;border-radius:50%;background:#f6f2e6;border:3px solid #5b45d6;display:grid;place-items:center;font:800 clamp(.7rem,2.4vw,1.05rem) system-ui;color:#111}
+.ring.on span{background:#5b45d6;color:#fff}
+.ov{position:absolute;inset:0;z-index:3;width:100%;height:100%;pointer-events:none}
+.over{position:absolute;inset:0;z-index:6;background:#0b0f1ccc;border-radius:12px;display:none;place-items:center;text-align:center;padding:20px}
+.over.show{display:grid}.over h2{font:800 2rem Georgia,serif;margin:0 0 6px}
+.controls{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:12px;font-size:.88rem}
+select,button{font:inherit;color:var(--paper);background:var(--ink3);border:1px solid var(--line);border-radius:6px;padding:7px 11px}
+button{cursor:pointer}button:hover:not(:disabled){border-color:var(--gold)}button:disabled{opacity:.45;cursor:default}
+button.primary{background:#5b45d6;border-color:#5b45d6;font-weight:600}button.primary:disabled{background:var(--ink3)}
+label{display:flex;gap:6px;align-items:center;color:var(--mute)}
+.key{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.8rem;color:var(--mute)}
+.key s{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;text-decoration:none;vertical-align:-1px}
+.panel{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:14px;min-height:420px;display:flex;flex-direction:column}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.tabs button{border-radius:14px;padding:4px 12px;font-size:.82rem}.tabs button.on{background:#5b45d6;border-color:#5b45d6}
+.tab{display:none;overflow:auto;max-height:640px}.tab.on{display:block}
+.note{color:var(--mute);font-size:.84rem}
+.opt{display:flex;gap:10px;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:7px 0;cursor:pointer;width:100%;text-align:left}
+.opt.on{border-color:#5b45d6;background:#2a2760}
+.opt .lt{flex:none;width:26px;height:26px;border-radius:50%;background:#5b45d6;display:grid;place-items:center;font-weight:800;font-size:.85rem}
+.opt small{display:block;color:var(--mute);font-size:.78rem}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px}
+.log .ln{margin:3px 0;font-size:.86rem}.log .dim{color:var(--mute)}.log .chg{font-size:.7rem;padding:1px 6px;border-radius:9px;background:#f0b84a33;color:#f0b84a;margin:0 4px}.log .win{color:var(--jade);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:.85rem;margin:6px 0 12px}th,td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mute);font-weight:500;font-size:.78rem}td.n,th.n{text-align:right}
+.rules li{margin:.35em 0}.rules ul{padding-left:1.1em;margin:.3em 0 .8em}
+</style>
+</head>
+<body>
+<header>
+  <h1>Democratic Katarenga</h1>
+  <p>Real Katarenga rules, but nobody decides alone. You vote from a multiple-choice ballot proposed by your seven advisors. The council of seven advisors votes on every move for the opponent, using the voting program you pick.</p>
+</header>
+<div class="layout">
+  <section>
+    <div class="status" id="status"></div>
+    <div class="board" id="board"></div>
+    <div class="key"><span><s style="background:var(--c0)"></s>Red: rook</span><span><s style="background:var(--c1)"></s>Yellow: bishop</span><span><s style="background:var(--c2)"></s>Green: knight</span><span><s style="background:var(--c3)"></s>Blue: king</span><span>Dashed circles: enemy camps</span></div>
+    <div class="controls">
+      <label>Council program <select id="prog"></select></label>
+      <label>First move <select id="first"><option value="1">You</option><option value="2">Council</option></select></label>
+      <button id="nb">New board</button><button id="rp">Replay this board</button>
+      <label><input type="checkbox" id="hint" checked>Show move icons</label>
+      <label><input type="checkbox" id="fast">Fast council</label>
+    </div>
+    <p class="note" id="progDesc"></p>
+  </section>
+  <aside class="panel">
+    <div class="tabs" id="tabs"><button data-t="ballot" class="on">Ballot</button><button data-t="debate">Debate</button><button data-t="votes">Votes</button><button data-t="moves">Moves</button><button data-t="rules">Rules</button></div>
+    <div class="tab on" id="t-ballot"></div>
+    <div class="tab log" id="t-debate"><p class="note">The council's debate appears here on its turn.</p></div>
+    <div class="tab" id="t-votes"></div>
+    <div class="tab" id="t-moves"></div>
+    <div class="tab rules" id="t-rules">
+      <h3>Katarenga, as implemented</h3>
+      <ul>
+        <li>8×8 board, 16 squares of each colour (four random quarterboards, 4 of each colour apiece). 8 pawns each on your baseline. You are ivory at the bottom.</li>
+        <li><b>A pawn moves by the colour of the square it starts on:</b> red = rook, yellow = bishop, green = knight, blue = king.</li>
+        <li>Rook and bishop slide any distance but <b>not beyond the next square of the same colour</b> in that line (they may land on it). They cannot jump pawns.</li>
+        <li>You capture by landing on an enemy pawn. <b>On your first move you may not capture a pawn on its home rank.</b></li>
+        <li>Reach the opposing baseline, then on a later turn step off the edge into one of the two enemy camps (corners). Pawns on that baseline can still be captured, or can move back into play.</li>
+        <li><b>You win</b> by getting a second pawn into the other camp, or by capturing 7 enemy pawns.</li>
+      </ul>
+      <h3>The democratic layer</h3>
+      <ul>
+        <li>On your turn your advisors propose moves. You vote for one (or write in any legal move).</li>
+        <li>On its turn the council proposes, debates (advisors can change their minds), then the chosen program decides.</li>
+        <li>Advisors differ: Hawk attacks, Guardian protects, Surveyor wants mobility, Weaver keeps shape, Pioneer races for camps, Trickster is erratic, Pragmatist balances.</li>
+      </ul>
+      <p class="note">The real game ships fixed printed quarterboards; here they are randomised. Edge case not in the rules: a side with no legal move passes.</p>
+    </div>
+  </aside>
+</div>
+<script>
+//ENGINE-START
+const COLN=['Red','Yellow','Green','Blue'],MVN=['rook','bishop','knight','king'],GL=['♜','♝','♞','♚'];
+let COL=new Int8Array(64);
+const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function makeColors(){for(;;){const c=new Int8Array(64);
+  for(let q=0;q<4;q++){const bag=sh([0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3]);for(let k=0;k<16;k++)c[((q>>1)*4+(k>>2))*8+(q&1)*4+(k&3)]=bag[k]}
+  let bad=(c[0]===1&&c[63]===1)||(c[7]===1&&c[56]===1);for(let x=0;x<8;x++)if(c[x]===0&&c[56+x]===0)bad=true;
+  if(!bad)return c}}
+const sq=i=>'abcdefgh'[i&7]+(8-(i>>3));
+const OR=[[-1,0],[1,0],[0,-1],[0,1]],DG=[[-1,-1],[-1,1],[1,-1],[1,1]],KN=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]],KG=OR.concat(DG);
+const pop=x=>(x&1)+(x>>1&1);
+function newState(){const b=new Int8Array(64);for(let c=0;c<8;c++){b[c]=2;b[56+c]=1}return{b,camp:[0,0,0],lost:[0,0,0],first:[0,1,1]}}
+function gen(s,side){const b=s.b,opp=3-side,goal=side===1?0:7,nc=s.first[side],out=[];
+  for(let i=0;i<64;i++){if(b[i]!==side)continue;const r=i>>3,c=i&7,k=COL[i];
+    if(k<2){for(const[dr,dc]of(k?DG:OR)){let y=r+dr,x=c+dc;while(y>=0&&y<8&&x>=0&&x<8){const t=y*8+x;if(b[t]===side)break;
+      if(b[t]===opp){if(!(nc&&y===goal))out.push([i,t]);break}out.push([i,t]);if(COL[t]===k)break;y+=dr;x+=dc}}}
+    else for(const[dr,dc]of(k===2?KN:KG)){const y=r+dr,x=c+dc;if(y<0||y>7||x<0||x>7)continue;const t=y*8+x;
+      if(b[t]===side||(b[t]===opp&&nc&&y===goal))continue;out.push([i,t])}
+    if(r===goal)for(let j=0;j<2;j++)if(!(s.camp[side]>>j&1))out.push([i,64+j])}
+  return out}
+function apply(s,m,side){const b=s.b.slice(),camp=s.camp.slice(),lost=s.lost.slice(),first=s.first.slice(),[f,t]=m;
+  b[f]=0;if(t>=64)camp[side]|=1<<(t-64);else{if(b[t])lost[b[t]]++;b[t]=side}first[side]=0;return{b,camp,lost,first}}
+const winner=s=>s.camp[1]===3||s.lost[2]>=7?1:s.camp[2]===3||s.lost[1]>=7?2:0;
+function feats(s,side){const b=s.b,opp=3-side;let own=0,en=0,adv=0,advE=0,base=0,baseE=0,shape=0;
+  for(let i=0;i<64;i++){const v=b[i];if(!v)continue;const r=i>>3,c=i&7;
+    if(v===side){own++;const p=side===1?7-r:r;adv+=p;if(p===7)base++;if(c<7&&b[i+1]===side)shape++;if(r<7){if(b[i+8]===side)shape++;if(c<7&&b[i+9]===side)shape++;if(c>0&&b[i+7]===side)shape++}}
+    else{en++;const p=opp===1?7-r:r;advE+=p;if(p===7)baseE++}}
+  const mine=gen(s,side),th=gen(s,opp),cnt=a=>{const z=new Set();for(const m of a)if(m[1]<64&&b[m[1]])z.add(m[1]);return z.size};
+  return[own+pop(s.camp[side])-en-pop(s.camp[opp]),adv-advE,pop(s.camp[side])-pop(s.camp[opp]),base-baseE,cnt(mine),cnt(th),mine.length-th.length,shape]}
+const ADV=[
+ {n:'Hawk',c:'#e5534b',tag:'leans on the opponent',pref:['cap','thr'],p:.35,w:[7,.3,60,6,3.5,-1.5,.1,0]},
+ {n:'Guardian',c:'#4a9be0',tag:'keeps our pawns safe',pref:['safe','cap'],p:.6,w:[7,.2,60,5,.8,-4.5,.1,.6]},
+ {n:'Surveyor',c:'#35b36b',tag:'claims open space',pref:['adv','safe'],p:.5,w:[4,.4,60,5,1,-1.5,.6,.2]},
+ {n:'Weaver',c:'#e8a73a',tag:'keeps the shape together',pref:['safe','thr'],p:.3,w:[5,.2,60,5,1,-2,.1,1.3]},
+ {n:'Pioneer',c:'#a35be0',tag:'races for the camps',pref:['base','adv'],p:.5,w:[4,1.2,60,12,1,-1.5,.1,0]},
+ {n:'Trickster',c:'#e0589a',tag:'has a hunch',pref:[],p:.7,w:[6,.6,60,8,1.5,-2.5,.2,.4]},
+ {n:'Pragmatist',c:'#4fc3d9',tag:'is the solid choice',pref:['safe','adv','cap'],p:.55,w:[6,.6,60,8,1.5,-2.5,.2,.4]}];
+function analyze(s,side){const mv=gen(s,side),n=mv.length,leaf=[];
+  for(let i=0;i<n;i++){const s1=apply(s,mv[i],side),w1=winner(s1);if(w1===side){leaf.push(1);continue}
+    const rep=gen(s1,3-side);if(!rep.length){leaf.push([feats(s1,side)]);continue}
+    const L=[];for(const r of rep){const s2=apply(s1,r,3-side);L.push(winner(s2)===3-side?null:feats(s2,side))}leaf.push(L)}
+  const sc=ADV.map((a,k)=>{const w=k===5?a.w.map(x=>x*(.4+Math.random()*1.2)):a.w;
+    return leaf.map(L=>{if(L===1)return 1000;let mn=1e9;for(const F of L){const v=F===null?-1000:F.reduce((t,x,j)=>t+x*w[j],0);if(v<mn)mn=v}
+      return mn+(k===5?(Math.random()-.5)*8:0)+Math.random()*1e-3})});
+  return{mv,sc}}
+function tagsOf(s,side,m){const[f,t]=m,T=[];if(t>=64)return['camp'];if(s.b[t])T.push('cap');if((t>>3)===(side===1?0:7))T.push('base');
+  const s1=apply(s,m,side);T.push(gen(s1,3-side).some(x=>x[1]===t)?'risk':'safe');
+  const th=new Set(gen(s1,side).filter(x=>x[0]===t&&x[1]<64&&s1.b[x[1]]).map(x=>x[1])).size;if(th)T.push('thr'+th);
+  const pr=i=>side===1?7-(i>>3):i>>3,d=pr(t)-pr(f);if(d>0)T.push('adv'+d);return T}
+function why(T,a){const txt=x=>x==='camp'?'enters an enemy camp':x==='cap'?'captures a pawn':x==='base'?'reaches the far baseline':x==='safe'?'lands on a safe square':x==='risk'?'is a risky square':x[0]==='t'?`threatens ${x.slice(3)} pawn${x.slice(3)>1?'s':''}`:`advances ${x.slice(3)} row${x.slice(3)>1?'s':''}`;
+  if(T.includes('camp'))return txt('camp');for(const p of ADV[a].pref){const h=T.find(x=>x.startsWith(p));if(h)return txt(h)}return ADV[a].tag}
+const mn=(s,m)=>sq(m[0])+(m[1]>=64?'→camp':(s.b[m[1]]?'x':'→')+sq(m[1]));
+const PROGS={
+ plurality:['Plurality','Most first-choice votes wins.'],
+ borda:['Borda count','Every rank on every ballot earns points.'],
+ approval:['Approval','Approve every move that is nearly as good as your favourite.'],
+ consensus:['Consensus','Play the move the most-unhappy voter dislikes least.'],
+ dictator:['Rotating dictator','One advisor decides alone each turn.'],
+ lottery:['Lottery','A randomly drawn advisor\'s favourite is played.']};
+function holdCouncil(s,side,prog,turn){const{mv,sc}=analyze(s,side),n=mv.length;
+  const norm=sc.map(a=>{const mn_=Math.min(...a),r=Math.max(...a)-mn_||1;return a.map(x=>(x-mn_)/r)});
+  const ranks=norm.map(a=>[...a.keys()].sort((x,y)=>a[y]-a[x]));
+  const props=ranks.map(r=>r[0]),tot=i=>norm.reduce((t,a)=>t+a[i],0),best=c=>c.reduce((x,y)=>tot(y)>tot(x)?y:x);
+  const cnt=()=>{const c=new Array(n).fill(0);ranks.forEach(r=>c[r[0]]++);return c};
+  let c0=cnt(),lead=c0.reduce((x,y,i)=>y>c0[x]||(y===c0[x]&&tot(i)>tot(x))?i:x,0);
+  const changed=ADV.map((a,k)=>{if(ranks[k][0]===lead)return false;
+    if(Math.random()<a.p*(norm[k][lead]>=.7?1:.12)){ranks[k].splice(ranks[k].indexOf(lead),1);ranks[k].unshift(lead);return true}return false});
+  const fin=ranks.map(r=>r[0]),pos=ranks.map(r=>{const p=[];r.forEach((x,i)=>p[x]=i);return p});
+  let metric=new Array(n).fill(0),win,unit,label;const all=[...Array(n).keys()],pick=m=>all.filter(i=>m[i]===Math.max(...m));
+  if(prog==='plurality'){fin.forEach(i=>metric[i]++);unit='votes';label=m=>`${m}/7 votes`}
+  else if(prog==='borda'){pos.forEach(p=>p.forEach((q,i)=>metric[i]+=n-1-q));unit='points';label=m=>`${m} Borda points`}
+  else if(prog==='approval'){norm.forEach(a=>a.forEach((x,i)=>{if(x>=.85)metric[i]++}));unit='approvals';label=m=>`approved by ${m}/7`}
+  else if(prog==='consensus'){all.forEach(i=>metric[i]=-Math.max(...norm.map(a=>1-a[i])));unit='regret';label=m=>`worst-off advisor regret ${Math.round(-m*100)}%`}
+  else if(prog==='dictator'){const d=turn%7;metric[fin[d]]=1;unit='dictator';label=()=>`${ADV[d].n} decides alone`}
+  else{const d=Math.random()*7|0;metric[fin[d]]=1;unit='draw';label=()=>`lottery drew ${ADV[d].n}`}
+  win=best(pick(metric));
+  const support=fin.filter(x=>x===win).length;
+  return{mv,n,norm,props:ranks.map((r,k)=>k).map(k=>props[k]),fin,changed,win,metric,label,unit,support,prog,lead,tags:null}}
+//ENGINE-END
+
+const $=id=>document.getElementById(id);
+let G={stats:ADV.map(()=>({w:0,t:0,f:0}))};
+const cellXY=(pos,side)=>pos<64?[(pos&7)+1,(pos>>3)+1]:[pos-64?9:0,side===1?0:9];
+function buildBoard(){const B=$('board');B.innerHTML='';
+  for(let i=0;i<64;i++){const d=document.createElement('div');d.className='sq c'+COL[i];d.style.left=((i&7)+1)*10+'%';d.style.top=((i>>3)+1)*10+'%';d.textContent=GL[COL[i]];d.id='sq'+i;B.appendChild(d)}
+  for(let c=0;c<8;c++){B.insertAdjacentHTML('beforeend',`<div class="lb" style="left:${(c+1)*10}%;top:90%">${'abcdefgh'[c]}</div><div class="lb" style="left:0;top:${(c+1)*10}%">${8-c}</div>`)}
+  for(const[x,y]of[[0,0],[9,0],[0,9],[9,9]])B.insertAdjacentHTML('beforeend',`<div class="camp" style="left:${x*10}%;top:${y*10}%"><i>${y?'☠':'⚑'}</i></div>`);
+  B.insertAdjacentHTML('beforeend','<svg class="ov" viewBox="0 0 100 100"><defs><marker id="ah" markerWidth="5" markerHeight="5" refX="3" refY="2.5" orient="auto"><path d="M0,0L5,2.5L0,5z" fill="#fff"/></marker></defs><line id="arrow" stroke="#fff" stroke-width="1.6" stroke-dasharray="3 2" marker-end="url(#ah)" opacity="0"/></svg><div id="rings"></div><div id="pawns"></div><div class="over" id="over"></div>');
+  B.classList.toggle('noglyph',!$('hint').checked)}
+function initPawns(){G.pawns=[];const P=$('pawns');P.innerHTML='';
+  for(let c=0;c<8;c++)for(const[side,pos]of[[1,56+c],[2,c]]){const e=document.createElement('div');e.className='pawn s'+side;e.innerHTML='<i></i>';P.appendChild(e);G.pawns.push({side,pos,e})}renderPawns()}
+function renderPawns(){for(const p of G.pawns){if(p.pos===-1){p.e.classList.add('out');continue}const[x,y]=cellXY(p.pos,p.side);p.e.style.left=x*10+'%';p.e.style.top=y*10+'%';p.e.classList.toggle('incamp',p.pos>=64)}}
+function hl(){document.querySelectorAll('.sq').forEach(e=>e.classList.remove('last','sel','dest','cap'));
+  if(G.last)G.last.forEach(i=>i<64&&$('sq'+i).classList.add('last'));
+  const sel=G.sel!=null&&G.opts?G.opts[G.sel].m:G.wi;const ar=$('arrow');ar.setAttribute('opacity',0);
+  if(G.wiFrom!=null&&!G.wi)$('sq'+G.wiFrom).classList.add('sel'),G.wiMoves.filter(m=>m[0]===G.wiFrom).forEach(m=>{if(m[1]<64)$('sq'+m[1]).classList.add('dest',...(G.s.b[m[1]]?['cap']:[]))});
+  if(sel){const[a,b]=[cellXY(sel[0],1),cellXY(sel[1],1)];if(sel[1]>=64)b[1]=0;
+    ar.setAttribute('x1',a[0]*10+5);ar.setAttribute('y1',a[1]*10+5);ar.setAttribute('x2',b[0]*10+5);ar.setAttribute('y2',b[1]*10+5);ar.setAttribute('opacity',.9);if(sel[0]<64)$('sq'+sel[0]).classList.add('sel')}
+  document.querySelectorAll('.ring').forEach((r,i)=>r.classList.toggle('on',i===G.sel))}
+function status(){const html=[1,2].map(sd=>{const n=[...G.s.b].filter(x=>x===sd).length;return`<div class="pl ${G.turn===sd&&!G.over?'on':''}"><b>${sd===1?'You (ivory)':'Council (dark)'}</b><br><span>${n} on board · ${G.s.lost[sd]} lost · camps ${pop(G.s.camp[sd])}/2</span></div>`}).join('');$('status').innerHTML=html}
+function tab(t){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.id==='t-'+t));document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t))}
+$('tabs').onclick=e=>{if(e.target.dataset.t)tab(e.target.dataset.t)};
+function newGame(fresh){if(fresh||!COL.some(x=>x)){COL=makeColors()}G.base=COL.slice();buildBoard();G.s=newState();G.over=0;G.last=null;G.sel=null;G.opts=null;G.wi=null;G.wiFrom=null;G.history=[];G.stats=ADV.map(()=>({w:0,t:0,f:0}));G.turn=+$('first').value;G.n=0;initPawns();status();renderMoves();renderVotes(null);$('t-debate').innerHTML='<p class="note">The council\'s debate appears here on its turn.</p>';clearTimeout(G.tm);startTurn()}
+function startTurn(){if(G.over)return;status();const mv=gen(G.s,G.turn);
+  if(!mv.length){G.passes=(G.passes||0)+1;if(G.passes>1){return finish(0)}G.history.push({side:G.turn,txt:'pass (no legal move)'});renderMoves();G.turn=3-G.turn;return setTimeout(startTurn,400)}G.passes=0;
+  if(G.turn===1)playerBallot();else councilTurn()}
+function playerBallot(){tab('ballot');const{mv,sc}=analyze(G.s,1),n=mv.length;
+  const norm=sc.map(a=>{const lo=Math.min(...a),r=Math.max(...a)-lo||1;return a.map(x=>(x-lo)/r)}),first=norm.map(a=>a.indexOf(Math.max(...a)));
+  const tot=i=>norm.reduce((t,a)=>t+a[i],0),groups={};first.forEach((m,k)=>(groups[m]=groups[m]||[]).push(k));
+  let list=Object.keys(groups).map(Number).sort((a,b)=>groups[b].length-groups[a].length||tot(b)-tot(a));
+  if(list.length<4){for(const i of[...Array(n).keys()].sort((a,b)=>tot(b)-tot(a))){if(!list.includes(i)&&list.length<4)list.push(i)}}
+  list=list.slice(0,6);G.opts=list.map(i=>{const m=mv[i],T=tagsOf(G.s,1,m),adv=groups[i]||[];
+    const reasons=(adv.length?adv:[6]).slice(0,2).map(k=>`${ADV[k].n}: ${why(T,k)}`);return{m,adv,reasons,txt:mn(G.s,m)}});
+  G.sel=null;G.wi=null;G.wiFrom=null;G.wiMoves=mv;G.writeIn=false;
+  $('rings').innerHTML=G.opts.map((o,i)=>{const[x,y]=cellXY(o.m[1],1);return`<button class="ring" data-i="${i}" style="left:${x*10}%;top:${y*10}%" aria-label="Option ${'ABCDEF'[i]}"><span>${'ABCDEF'[i]}</span></button>`}).join('');
+  $('rings').onclick=e=>{const b=e.target.closest('.ring');if(b)pick(+b.dataset.i)};
+  $('t-ballot').innerHTML=`<p class="note">Your assembly of seven advisors proposes. <b>Pick one and cast your vote</b>, or click a lettered ring on the board.</p><div id="opts">${G.opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="lt">${'ABCDEF'[i]}</span><span><b>${o.txt}</b> ${o.adv.map(k=>`<span class="dot" style="background:${ADV[k].c}"></span>`).join('')}<small>${o.reasons.join(' · ')}</small></span></button>`).join('')}</div>
+    <button id="wi">Write-in: choose any legal move on the board</button> <button class="primary" id="cast" disabled>Cast my vote</button><p class="note" id="wiNote"></p>`;
+  $('opts').onclick=e=>{const b=e.target.closest('.opt');if(b)pick(+b.dataset.i)};
+  $('wi').onclick=()=>{G.writeIn=!G.writeIn;G.sel=null;G.wi=null;G.wiFrom=null;$('wiNote').textContent=G.writeIn?'Click one of your pawns, then a highlighted square.':'';pickRefresh();hl()};
+  $('cast').onclick=castVote;hl()}
+function pickRefresh(){document.querySelectorAll('.opt').forEach((o,i)=>o.classList.toggle('on',i===G.sel));$('cast').disabled=G.sel==null&&!G.wi}
+function pick(i){G.sel=i;G.wi=null;G.writeIn=false;G.wiFrom=null;pickRefresh();hl()}
+function castVote(){const m=G.sel!=null?G.opts[G.sel].m:G.wi;if(!m)return;const how=G.sel!=null?`ballot ${'ABCDEF'[G.sel]}`:'write-in';const o=G.sel!=null?G.opts[G.sel]:null;
+  const note=o&&o.adv.length?`backed by ${o.adv.map(k=>ADV[k].n).join(', ')}`:'';$('rings').innerHTML='';$('t-ballot').innerHTML='<p class="note">Vote cast. The council is up.</p>';
+  G.opts=null;G.sel=null;G.wi=null;G.wiFrom=null;doMove(m,1,`${how}${note?' · '+note:''}`)}
+$('board').addEventListener('click',e=>{if(!G.writeIn||G.turn!==1||G.over)return;const r=$('board').getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/r.width*10),y=Math.floor((e.clientY-r.top)/r.height*10);
+  let i=null;if(x>=1&&x<=8&&y>=1&&y<=8)i=(y-1)*8+(x-1);else if(y===0&&(x===0||x===9))i=64+(x?1:0);if(i===null)return;
+  if(i<64&&G.s.b[i]===1&&G.wiMoves.some(m=>m[0]===i)){G.wiFrom=i;G.wi=null}
+  else if(G.wiFrom!=null){const m=G.wiMoves.find(m=>m[0]===G.wiFrom&&m[1]===i);if(m){G.wi=m;G.wiFrom=null;G.writeIn=false;$('wiNote').textContent='Write-in: '+mn(G.s,m)}}
+  pickRefresh();hl()});
+function councilTurn(){tab('debate');const prog=$('prog').value,R=holdCouncil(G.s,2,prog,G.n),mv=R.mv,L=[];
+  const nm=k=>`<b style="color:${ADV[k].c}">${ADV[k].n}</b>`,M=i=>mn(G.s,mv[i]);
+  L.push('<div class="ln dim">Council convenes. Each advisor proposes.</div>');
+  ADV.forEach((a,k)=>L.push(`<div class="ln">${nm(k)} ${M(R.props[k])} <span class="dim">— ${why(tagsOf(G.s,2,mv[R.props[k]]),k)}.</span></div>`));
+  L.push(`<div class="ln dim">Program: ${PROGS[prog][0]} — ${PROGS[prog][1]}</div><div class="ln dim">Debate: argue and lock in final votes.</div>`);
+  ADV.forEach((a,k)=>L.push(`<div class="ln">${nm(k)} ${R.changed[k]?`<span class="chg">changed mind</span> Changed to ${M(R.fin[k])}.`:`Sticking with ${M(R.fin[k])}.`}</div>`));
+  L.push(`<div class="ln win">${M(R.win)} wins: ${R.label(R.metric[R.win])}.</div>`);
+  $('t-debate').innerHTML='';let i=0;const dly=$('fast').checked?40:330;
+  const step=()=>{if(i<L.length){$('t-debate').insertAdjacentHTML('beforeend',L[i++]);$('t-debate').scrollTop=1e5;G.tm=setTimeout(step,dly)}else{
+    ADV.forEach((a,k)=>{const st=G.stats[k];st.t++;if(R.fin[k]===R.win)st.w++;if(R.changed[k])st.f++});renderVotes({R,M});
+    doMove(mv[R.win],2,`${PROGS[prog][0]}: ${R.label(R.metric[R.win])}`)}};
+  G.tm=setTimeout(step,200)}
+function doMove(m,side,info){const s=G.s,[f,t]=m,pw=G.pawns.find(p=>p.pos===f&&p.side===side),cap=t<64&&s.b[t]?G.pawns.find(p=>p.pos===t):null;
+  G.history.push({side,txt:mn(s,m),info});G.n++;if(cap)cap.pos=-1;pw.pos=t;G.s=apply(s,m,side);G.last=[f,t];renderPawns();hl();status();renderMoves();
+  const w=winner(G.s);if(w)return finish(w);G.turn=3-side;G.tm=setTimeout(startTurn,side===1?300:450)}
+function finish(w){G.over=1;status();const o=$('over');const why_=w&&G.s.camp[w]===3?'two pawns reached the enemy camps':w?'seven pawns captured':'both sides blocked';
+  o.innerHTML=`<div><h2>${w===1?'You win!':w===2?'The council wins':'Draw'}</h2><p>${why_}.</p><p class="note">Democracy report is in the Votes tab.</p><button class="primary" id="again">Play again</button></div>`;o.classList.add('show');
+  $('again').onclick=()=>newGame(true);renderVotes(G.lastVote||null);tab('votes')}
+function renderMoves(){$('t-moves').innerHTML=G.history.length?`<table><tr><th>#</th><th>Side</th><th>Move</th><th>How</th></tr>${G.history.map((h,i)=>`<tr><td>${i+1}</td><td>${h.side===1?'You':'Council'}</td><td>${h.txt}</td><td class="note">${h.info||''}</td></tr>`).join('')}</table>`:'<p class="note">No moves yet.</p>'}
+function renderVotes(v){if(v)G.lastVote=v;v=G.lastVote;let h='';
+  if(v){const{R,M}=v,idx=[...R.metric.keys()].filter(i=>R.metric[i]!==0||R.fin.includes(i)).sort((a,b)=>R.metric[b]-R.metric[a]).slice(0,6);
+    h+=`<h3>Latest council vote</h3><table><tr><th>Move</th><th>Backed by (final)</th><th class="n">${R.unit}</th></tr>${idx.map(i=>`<tr><td>${i===R.win?'★ ':''}${M(i)}</td><td>${ADV.map((a,k)=>R.fin[k]===i?`<span class="dot" style="background:${a.c}" title="${a.n}"></span>`:'').join('')}</td><td class="n">${R.unit==='regret'?Math.round(-R.metric[i]*100)+'%':R.metric[i]}</td></tr>`).join('')}</table>`}
+  const T=Math.max(...G.stats.map(s=>s.t));
+  h+=`<h3>Advisor loyalty${T?'':''}</h3><table><tr><th>Advisor</th><th class="n">With council</th><th class="n">Changed mind</th></tr>${ADV.map((a,k)=>{const s=G.stats[k];return`<tr><td><span class="dot" style="background:${a.c}"></span>${a.n}</td><td class="n">${s.t?Math.round(100*s.w/s.t)+'%':'-'}</td><td class="n">${s.f}</td></tr>`}).join('')}</table><p class="note">"With council" is how often the advisor's final vote matched the move played.</p>`;
+  $('t-votes').innerHTML=h}
+$('prog').innerHTML=Object.entries(PROGS).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');
+$('prog').onchange=()=>$('progDesc').textContent=PROGS[$('prog').value][1];$('prog').onchange();
+$('hint').onchange=()=>$('board').classList.toggle('noglyph',!$('hint').checked);
+$('nb').onclick=()=>newGame(true);$('rp').onclick=()=>{COL=G.base.slice();newGame(false)};
+newGame(true);
+</script>
+</body>
+</html>
